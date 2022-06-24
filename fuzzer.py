@@ -1,5 +1,7 @@
 import requests
 import re
+import argparse
+import os
 from typing import TextIO, Tuple
 
 
@@ -50,11 +52,10 @@ def pp():
 def fuzz(url: str, wordlist: TextIO) -> None:
     """Prints valid URLs from queries that resolve."""
     urls = prepare_wordlist(url, wordlist)
-    i = 0
-    try:
-        i += 1
-        for url in urls[0]:
-            req = requests.get(url, timeout=1)
+
+    for url in urls[0]:
+        try:
+            req = requests.get(url, timeout=10)
             match req.status_code:
                 case 200:
                     print(f"Discovered: {url}")
@@ -64,15 +65,30 @@ def fuzz(url: str, wordlist: TextIO) -> None:
                     print(f"Temporary redirect: {url}")
                 case _:
                     continue
-            print(f"{i} of {urls[2]}")
-        print(f"Did not process: {urls[1]}")
-    except Exception as e:
-        print(f"***\n{e}\n***")
+        except Exception as e:
+            print(f"***\n{e}\n***")
+
+    print(f"Did not process: {urls[1]}")
 
 
 def main() -> None:
-    wordlist = "/usr/share/wordlists/rockyou.txt" #dirbuster/directory-list-2.3-small.txt"
-    url = 'http://bing.com/FUZZ'
+    parser = argparse.ArgumentParser(description='URL Fuzzer (E.g. ')
+    parser.add_argument('-u', '--url', required=True, type=str,
+                        default=None, dest="url",
+                        help="Specify URL to fuzz (e.g. www.google.com?q=FUZZ")
+    parser.add_argument('-w', '--wordlist', required=True, type=str,
+                        default=None,
+                        help='Specify wordlist to use (e.g. /usr/share/wordlists/rockyou.txt)')
+
+    args = parser.parse_args()
+
+    if args.url is not None:
+        url = args.url
+    if (args.wordlist is not None) and (os.path.isfile(args.wordlist)):
+        wordlist = args.wordlist
+    else:
+        print(f"[!] Invalid wordlist")
+        exit(0)
 
     fuzz(url, wordlist)
 
