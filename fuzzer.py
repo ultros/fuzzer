@@ -5,6 +5,9 @@ import os
 from typing import TextIO, Tuple
 
 
+def random_user_agent():
+
+
 def format_url(url: str, keyword: str) -> str:
     """Returns a formatted URL to fuzz."""
     try:
@@ -20,8 +23,8 @@ def format_url(url: str, keyword: str) -> str:
     return url
 
 
-def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[str, str]:
-    """Returns valid URLs and a list of invalid entries discovered in the wordlist."""
+def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[str, str, str]:
+    """Returns valid URLs, a total of all words, and a list of invalid words discovered in the wordlist."""
     urls = []
     badwords = []
 
