@@ -2,13 +2,13 @@ import requests
 import re
 import argparse
 import os
-from typing import TextIO, Tuple
+from typing import TextIO, Tuple, Union
 
 
 def random_user_agent():
 
 
-def format_url(url: str, keyword: str) -> str:
+def format_url(url: str, keyword: str) -> Union[int, str]:
     """Returns a formatted URL to fuzz."""
     try:
         if re.search("FUZZ", url):
@@ -23,7 +23,7 @@ def format_url(url: str, keyword: str) -> str:
     return url
 
 
-def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[str, str, str]:
+def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[list, list, int]:
     """Returns valid URLs, a total of all words, and a list of invalid words discovered in the wordlist."""
     urls = []
     badwords = []
