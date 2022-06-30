@@ -5,8 +5,10 @@ import os
 import concurrent.futures
 from typing import TextIO, Tuple, Union
 
+
 def random_user_agent():
     pass
+
 
 def format_url(url: str, keyword: str) -> int | str:
     """Returns a formatted URL to fuzz."""
@@ -62,19 +64,21 @@ def process_url(url: str) -> str:
         case _:
             pass
 
+
 def fuzz(url: str, wordlist: TextIO) -> None:
-    """Prints valid URLs from queries that resolve."""
+    """Concurrent processing. Returns nothing."""
     urls = prepare_wordlist(url, wordlist)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
         futures = []
 
         for url in urls[0]:
-                futures.append(executor.submit(process_url, url=url))
+            futures.append(executor.submit(process_url, url=url))
 
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
-            print(res)
+            if res != None: # case_
+                print(res)
 
     print(f"Did not process: {urls[1]}")
 
