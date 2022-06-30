@@ -5,9 +5,10 @@ import os
 import concurrent.futures
 from typing import TextIO, Tuple, Union
 
-
-def random_user_agent():
-    pass
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                  'Chrome/60.0.3112.113 Safari/537.36 '
+}
 
 
 def format_url(url: str, keyword: str) -> int | str:
@@ -53,14 +54,14 @@ def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[list, list, int]:
 
 def process_url(url: str) -> str:
     """Performs a GET request for the URL and returns a page status string."""
-    res = requests.get(url, timeout=10)
+    res = requests.get(url, timeout=10, allow_redirects=False, headers=headers)
     match res.status_code:
         case 200:
             return f"Discovered: {url}"
         case 301:
-            return f"Permanent redirect: {url}"
-        case 302:
             return f"Temporary redirect: {url}"
+        case 302:
+            return f"Permanent redirect: {url}"
         case _:
             pass
 
@@ -69,7 +70,7 @@ def fuzz(url: str, wordlist: TextIO) -> None:
     """Concurrent processing. Returns nothing."""
     urls = prepare_wordlist(url, wordlist)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
         futures = []
 
         for url in urls[0]:
@@ -77,7 +78,7 @@ def fuzz(url: str, wordlist: TextIO) -> None:
 
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
-            if res != None: # case_
+            if res != None:  # case_
                 print(res)
 
     print(f"Did not process: {urls[1]}")
