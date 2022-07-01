@@ -1,9 +1,10 @@
-import requests
-import re
 import argparse
-import os
 import concurrent.futures
+import os
+import re
 from typing import TextIO, Tuple
+
+import requests
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -54,17 +55,22 @@ def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[list, list, int]:
 
 def process_url(url: str) -> str:
     """Performs a GET request for the URL and returns a page status string."""
+    try:
+        res = requests.get(url.strip(), timeout=3, allow_redirects=False, headers=headers)
+        match res.status_code:
+            case 200:
+                return f"Discovered: {url}"
+            case 301:
+                return f"Temporary redirect: {url}"
+            case 302:
+                return f"Permanent redirect: {url}"
+            case _:
+                pass
 
-    res = requests.get(url, timeout=10, allow_redirects=False, headers=headers)
-    match res.status_code:
-        case 200:
-            return f"Discovered: {url}"
-        case 301:
-            return f"Temporary redirect: {url}"
-        case 302:
-            return f"Permanent redirect: {url}"
-        case _:
-            pass
+    except Exception as e:
+        # Error on subdomain does not exist
+        # print(f"{e}")
+        return "Invalid URL"
 
 
 def fuzz(url: str, wordlist: TextIO) -> None:
@@ -78,19 +84,18 @@ def fuzz(url: str, wordlist: TextIO) -> None:
         for url in urls[0]:
             futures.append(executor.submit(process_url, url=url))
 
-        for future in concurrent.futures.as_completed(futures):
+        try:
+            for future in concurrent.futures.as_completed(futures):
 
-            try:
                 res = future.result()
-            except Exception as e:
-                continue
-                # print(f"{e}")
 
-            print(f"{i} of {len(urls[0])}", end="\r")
+                if res != "Invalid URL" and res is not None:
+                    print(res)
+                i += 1
+                print(f"{i} of {len(urls[0])}", end="\r")
+
+        except Exception as e:
             i += 1
-
-            if res != None:  # case_
-                print(res)
 
     print(f"Did not process: {urls[1]}")
 
@@ -102,7 +107,7 @@ def main() -> None:
                         help="Specify URL to fuzz (e.g. www.google.com?q=FUZZ")
     parser.add_argument('-w', '--wordlist', required=True, type=str,
                         default=None,
-                        help='Specify wordlist to use (e.g. /usr/share/wordlists/rockyou.txt)')
+                        help='Specify wordlist to use (e.g. /usr/share/wordlists/dirb/commmon.txt)')
 
     args = parser.parse_args()
 
