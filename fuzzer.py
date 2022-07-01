@@ -3,7 +3,7 @@ import re
 import argparse
 import os
 import concurrent.futures
-from typing import TextIO, Tuple, Union
+from typing import TextIO, Tuple
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -54,6 +54,7 @@ def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[list, list, int]:
 
 def process_url(url: str) -> str:
     """Performs a GET request for the URL and returns a page status string."""
+
     res = requests.get(url, timeout=10, allow_redirects=False, headers=headers)
     match res.status_code:
         case 200:
@@ -69,15 +70,25 @@ def process_url(url: str) -> str:
 def fuzz(url: str, wordlist: TextIO) -> None:
     """Concurrent processing. Returns nothing."""
     urls = prepare_wordlist(url, wordlist)
+    i = 0
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
         futures = []
 
         for url in urls[0]:
             futures.append(executor.submit(process_url, url=url))
 
         for future in concurrent.futures.as_completed(futures):
-            res = future.result()
+
+            try:
+                res = future.result()
+            except Exception as e:
+                continue
+                # print(f"{e}")
+
+            print(f"{i} of {len(urls[0])}", end="\r")
+            i += 1
+
             if res != None:  # case_
                 print(res)
 
