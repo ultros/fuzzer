@@ -9,7 +9,7 @@ Total URLs to fuzz: 4615
 Total invalid words in wordlist: 0  
 Forbidden: http://127.0.0.1/.htpasswd  
 Forbidden: http://127.0.0.1/.htaccess
-Forbidden: http://10.129.88.84/cgi-bin/
+Forbidden: http://10.129.88.84/cgi-bin/  
 └─[¿shellshock?] -> Scan for scripts in /cgi-bin/ (e.g. http://127.0.0.1/cgi-bin/FUZZ.sh).  
   
 ---  
