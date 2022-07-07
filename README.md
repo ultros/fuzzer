@@ -1,5 +1,5 @@
 # fuzzer
-Multithreaded URL fuzzer, directory buster, and exploit suggestor (i.e. subdomains, queries, directories)
+Multithreaded URL fuzzer, directory buster, and exploit suggester (i.e. subdomains, queries, directories)
 
 fuzzer -u http://google.com/?q=FUZZ -w /usr/share/wordlists/dirb/common.txt  
 
