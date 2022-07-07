@@ -13,7 +13,7 @@ headers = {
 
 
 def format_url(url: str, keyword: str) -> int | str:
-    """Returns a formatted URL to fuzz."""
+    """Returns a formatted URL to fuzz/directory bust."""
     try:
         if re.search("FUZZ", url):
             url = url.replace("FUZZ", keyword.strip())
@@ -53,6 +53,13 @@ def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[list, list, int]:
     return urls, badwords, total_urls
 
 
+def exploit_suggester(url: str) -> str:
+    """Takes a URL and determines if vulnerabilities might exist. Returns vulnerability notes."""
+    if re.search("/cgi-bin/", url):
+        return "└─[¿shellshock?] -> Scan for scripts in /cgi-bin/ (e.g. http://127.0.0.1/cgi-bin/FUZZ.sh)."
+
+    return
+
 def process_url(url: str) -> str:
     """Performs a GET request for the URL and returns a page status string."""
     try:
@@ -65,7 +72,10 @@ def process_url(url: str) -> str:
             case 302:
                 return f"Permanent redirect: {url}"
             case 403:
-                return f"Forbidden: {url}"
+                if exploit_suggester(url) != None:
+                    return f"Forbidden: {url}\n{exploit_suggester(url)}"
+                else:
+                    return f"Forbidden: {url}"
             case _:
                 pass
 
