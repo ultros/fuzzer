@@ -64,6 +64,8 @@ def process_url(url: str) -> str:
                 return f"Temporary redirect: {url}"
             case 302:
                 return f"Permanent redirect: {url}"
+            case 403:
+                return f"Forbidden: {url}"
             case _:
                 pass
 
@@ -78,7 +80,7 @@ def fuzz(url: str, wordlist: TextIO) -> None:
     urls = prepare_wordlist(url, wordlist)
     i = 0
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
         futures = []
 
         for url in urls[0]:
@@ -90,7 +92,9 @@ def fuzz(url: str, wordlist: TextIO) -> None:
                 res = future.result()
 
                 if res != "Invalid URL" and res is not None:
-                    print(res)
+                    print(f"{res}")
+                    i += 1
+
                 i += 1
                 print(f"{i} of {len(urls[0])}", end="\r")
 
