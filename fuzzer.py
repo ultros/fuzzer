@@ -68,7 +68,6 @@ def exploit_suggester(url: str) -> str | None:
 #         res = requests.get(f"{url.strip()} + .{extension}", timeout=3, allow_redirects=False, headers=headers)
 
 
-
 def process_url(url: str) -> str | None:
     """Performs a GET request for the URL and returns a page status code."""
     try:
@@ -76,6 +75,9 @@ def process_url(url: str) -> str | None:
         match res.status_code:
             case 200:
                 if re.search("Error 404", res.text):
+                    return None
+                if re.search("status=404", res.text) and re.search("Whitelabel Error Page", res.text):
+                    # Spring boot 404 with default content
                     return None
                 if exploit_suggester(url) != None:
                     return f"Discovered: {url}\n{exploit_suggester(url)}"
@@ -96,6 +98,8 @@ def process_url(url: str) -> str | None:
                     return f"Forbidden: {url}\n{exploit_suggester(url)}"
                 else:
                     return f"Forbidden: {url}"
+            case 500:
+                return None
             case _:
                 pass
 
